@@ -2,6 +2,7 @@ import hre, { ethers } from 'hardhat';
 import { expect } from "chai";
 
 describe("NFTMarket", function () {
+    // TODO move to fixtures instead of repeated code
     it("Should transmit Transfer event and have correct tokenId", async function () {
         // fetching the contract
         const NFTMarket = await hre.ethers.getContractFactory("NFTMarket")
