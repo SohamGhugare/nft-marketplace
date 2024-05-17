@@ -48,4 +48,23 @@ contract NFTMarket is ERC721URIStorage {
         payable(listing.seller).transfer(Math.mulDiv(listing.price, 95, 100));
     }
 
+    // cancel listing
+    function cancelListing(uint256 tokenID) public {
+        // checking if nft is listed for sale
+        NFTListing memory listing = _listings[tokenID];
+        require(listing.price > 0, "NFTMarket: NFT not for sale.");
+
+        // checking if owner is correct
+        require(listing.seller == msg.sender, "NFTMarket: You don't own this NFT");
+        transferFrom(address(this), msg.sender, tokenID);
+        clearListing(tokenID);
+    }
+
+    // this function clears the listing from our mapping
+    function clearListing(uint256 tokenID) private {
+        _listings[tokenID].price = 0;
+        _listings[tokenID].seller = address(0);
+
+    }
+
 }
