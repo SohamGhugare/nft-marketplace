@@ -2,6 +2,7 @@
 pragma solidity ^0.8.24;
 
 import {ERC721URIStorage, ERC721} from "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
+import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 
 struct NFTListing {
     uint256 price;
@@ -9,7 +10,6 @@ struct NFTListing {
 }
 
 contract NFTMarket is ERC721URIStorage {
-
     uint256 private _tokenID = 0;
 
     mapping(uint256 => NFTListing) private _listings;
@@ -32,6 +32,39 @@ contract NFTMarket is ERC721URIStorage {
         // transfering ownership of the NFT to the market for listing
         transferFrom(msg.sender, address(this), tokenID);
         _listings[tokenID] = NFTListing(price, msg.sender);
+    }
+
+    // buying the NFTs
+    function buyNFT(uint256 tokenID) public payable {
+        // checking if nft is listed for sale
+        NFTListing memory listing = _listings[tokenID];
+        require(listing.price > 0, "NFTMarket: NFT not for sale.");
+
+        // checking if price sent to this func is correct
+        require(msg.value == listing.price, "NFTMarket: Incorrect price.");
+
+        transferFrom(address(this), msg.sender, tokenID);
+        // 5% cut to the market
+        payable(listing.seller).transfer(Math.mulDiv(listing.price, 95, 100));
+    }
+
+    // cancel listing
+    function cancelListing(uint256 tokenID) public {
+        // checking if nft is listed for sale
+        NFTListing memory listing = _listings[tokenID];
+        require(listing.price > 0, "NFTMarket: NFT not for sale.");
+
+        // checking if owner is correct
+        require(listing.seller == msg.sender, "NFTMarket: You don't own this NFT");
+        transferFrom(address(this), msg.sender, tokenID);
+        clearListing(tokenID);
+    }
+
+    // this function clears the listing from our mapping
+    function clearListing(uint256 tokenID) private {
+        _listings[tokenID].price = 0;
+        _listings[tokenID].seller = address(0);
+
     }
 
 }
